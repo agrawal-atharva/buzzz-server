@@ -100,10 +100,10 @@ const suggestionUsers = async (req, res) => {
 		// console.log('Current user', currentUser);
 		// console.log('Suggestions', suggestions);
 		const suggestions = await User.find({
-			_id: { $ne: [req.params.id] },
-			friends: { $ne: [req.params.id] },
+			_id: { $ne: req.params.id },
+			friends: { $ne: req.params.id },
 		});
-		console.log('Suggestion', suggestions)
+		console.log('Suggestion', suggestions);
 		res.status(200).json(suggestions);
 	} catch (err) {
 		res.status(500).json(err);
