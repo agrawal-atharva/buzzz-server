@@ -71,7 +71,9 @@ const commentPost = async (req, res) => {
 
 const getPost = async (req, res) => {
 	try {
-		const post = await Post.findById(req.params.id);
+		console.log('id', req.params.id);
+		const post = await Post.find({ userId: req.params.id });
+		console.log('Post', post);
 		res.status(200).json(post);
 	} catch (err) {
 		res.status(500).json(err);
@@ -80,14 +82,28 @@ const getPost = async (req, res) => {
 
 const getAllPost = async (req, res) => {
 	try {
-		const currentUser = await User.findById(req.params.id);
-		const currentUserPosts = await Post.find({ userId: currentUser._id });
-		const friendPost = await Promise.all(
-			currentUser.friends.map((friendId) => {
-				Post.find({ userId: friendId });
-			})
-		);
-		res.json(currentUserPosts).concat(...friendPost);
+		// const currentUser = await User.findById(req.params.id);
+		// const currentUserPosts = await Post.find({ userId: currentUser._id });
+		// console.log('Current User Post', currentUserPosts);
+		// console.log('Friends:', currentUser.friends);
+		// const friendPost = await Promise.all(
+		// 	currentUser.friends.map((friendId) => {
+		// 		console.log(friendId);
+		// 		Post.find({ userId: friendId }).lean();
+		// 	})
+		// ).catch((err) => {
+		// 	res.status(404).json(err);
+		// });
+		// console.log('FriendsPost:', friendPost);
+		// res
+		// 	.status(200)
+		// 	.json(currentUserPosts)
+		// 	.concat(...friendPost);
+		const getAllPost = await Post.find({
+			userId: { $in: [req.user._id, ...req.user.friends] },
+		}).populate('userId');
+		console.log('AllPost', getAllPost);
+		res.status(200).json(getAllPost);
 	} catch (err) {
 		res.status(500).json(err);
 	}

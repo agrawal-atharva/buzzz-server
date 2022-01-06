@@ -20,10 +20,7 @@ const UserSchema = new Schema(
 			type: String,
 			default: '',
 		},
-		friends: {
-			type: Array,
-			default: [],
-		},
+		friends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 		isModerator: {
 			type: Boolean,
 			default: false,
