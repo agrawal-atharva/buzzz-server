@@ -1,29 +1,21 @@
 const User = require('../../model/User');
-const FriendRequest = require('../../model/FriendRequest');
 
 const addFriend = async (req, res) => {
 	if (req.body.userId !== req.params.id) {
 		try {
 			const user = await User.findById(req.params.id);
 			const currentUser = await User.findById(req.body.userId);
-			if (!user.friends.includes(req.body.userId)) {
-				// try {
-				// 	const friendRequest = await new FriendRequest({
-				// 		requester: req.body.userId,
-				// 		recipient: req.params.id,
-				// 		status: '',
-				// 	});
-				// } catch (err) {
-				// 	res.status(500).json(err);
-				// }
-
+			if (
+				!currentUser.friends.includes(req.params.id) &&
+				!currentUser.requestSent.includes(req.body.userId)
+			) {
 				await user.updateOne({
 					$push: {
-						friends: [req.body.userId],
+						notification: [req.body.userId],
 					},
 				});
-				await currentUser.updateOne({ $push: { friends: req.params.id } });
-				res.status(200).json('Request sent');
+				await currentUser.updateOne({ $push: { requestSent: req.params.id } });
+				res.status(200).json(user);
 			} else {
 				res.status(403).json('You are already friends');
 			}
@@ -94,16 +86,10 @@ const getUser = async (req, res) => {
 
 const suggestionUsers = async (req, res) => {
 	try {
-		// console.log('First');
-		// const suggestions = await User.find({ _id: { $ne: [req.params.id] } });
-		// const currentUser = await User.findById(req.params.id);
-		// console.log('Current user', currentUser);
-		// console.log('Suggestions', suggestions);
 		const suggestions = await User.find({
 			_id: { $ne: req.params.id },
 			friends: { $ne: req.params.id },
 		});
-		console.log('Suggestion', suggestions);
 		res.status(200).json(suggestions);
 	} catch (err) {
 		res.status(500).json(err);
@@ -112,7 +98,6 @@ const suggestionUsers = async (req, res) => {
 
 const currentUser = async (req, res) => {
 	try {
-		// const currentUser = await User.find(req.user);
 		res.status(200).json(req.user);
 	} catch (err) {
 		res.status(500).json(err);
@@ -122,10 +107,7 @@ const currentUser = async (req, res) => {
 const contactUser = async (req, res) => {
 	try {
 		const id = req.user._id;
-		console.log('ID::', id);
-		// console.log('PARAMS', (id = req.user._id));
 		const user = await User.findById(id).populate('friends');
-		console.log('User::', user);
 		const userList = user.friends.map((item) => {
 			return {
 				name: item.username,
@@ -133,11 +115,36 @@ const contactUser = async (req, res) => {
 				pic: item.profilePicture,
 			};
 		});
-		console.log('User list', userList);
 		res.status(200).json(userList);
 	} catch (err) {
 		res.status(500).json(err);
 	}
+};
+
+const showAllFriendRequest = async (req, res) => {
+	try {
+		const currentUser = await User.findById(req.params.id).populate(
+			'notification'
+		);
+		console.log('CUI', currentUser);
+		const currentUserRequest = currentUser.notification.map((users) => {
+			console.log('users::', users);
+			return {
+				id: users._id,
+				name: users.username,
+				profilePic: users.profilePicture,
+			};
+		});
+		console.log('CUR', currentUserRequest);
+		res.status(200).json(currentUserRequest);
+	} catch (err) {
+		res.status(500).json(err);
+	}
+};
+
+const acceptRequest = async (req, res) => {
+	const currentUser = await User.findById(req.params.id);
+	const acceptRequest = currentUser.notification.map();
 };
 
 module.exports = {
@@ -149,4 +156,5 @@ module.exports = {
 	suggestionUsers,
 	currentUser,
 	contactUser,
+	showAllFriendRequest,
 };

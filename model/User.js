@@ -25,7 +25,8 @@ const UserSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
-		notification: {
+		notification: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+		requestSent: {
 			type: Array,
 			default: [],
 		},

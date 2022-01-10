@@ -7,7 +7,8 @@ const {
 	getUser,
 	suggestionUsers,
 	currentUser,
-	contactUser
+	contactUser,
+	showAllFriendRequest,
 } = require('../../controller/Users/users');
 
 const router = express.Router();
@@ -27,6 +28,8 @@ router.put('/:id/remove/friend', removeFriend);
 //get user for suggestions
 router.get('/:id/suggestions', suggestionUsers);
 //contact user
-router.get('/contacts/:id', contactUser)
+router.get('/contacts/:id', contactUser);
+//show all request
+router.get('/:id/showRequest', showAllFriendRequest);
 
 module.exports = router;
