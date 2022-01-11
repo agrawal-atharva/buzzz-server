@@ -42,15 +42,26 @@ const deletePost = async (req, res) => {
 	}
 };
 
-const likeDislike = async (req, res) => {
+const likePost = async (req, res) => {
 	try {
 		const post = await Post.findById(req.params.id);
 		if (!post.likes.includes(req.body.userId)) {
-			await post.updateOne({ $push: req.body.userId });
-			res.status(200).json('Post liked');
-		} else {
-			await updateOne({ $pull: req.body.userId });
-			res.status(200).json('Post disliked');
+			await post
+				.updateOne({ $push: { likes: req.body.userId } })
+				.populate('userId');
+			res.status(200).json(post);
+		}
+	} catch (err) {
+		res.status(500).json(err);
+	}
+};
+
+const disLikePost = async (req, res) => {
+	try {
+		const post = await Post.findById(req.params.id);
+		if (post.likes.includes(req.body.userId)) {
+			await post.updateOne({ $pull: req.body.userId });
+			res.status(200).json(post);
 		}
 	} catch (err) {
 		res.status(500).json(err);
@@ -72,11 +83,9 @@ const commentPost = async (req, res) => {
 	}
 };
 
-const getPost = async (req, res) => {
+const getSinglePost = async (req, res) => {
 	try {
-		console.log('id', req.params.id);
-		const post = await Post.find({ userId: req.params.id });
-		console.log('Post', post);
+		const post = await Post.find({ postId: req.params.id });
 		res.status(200).json(post);
 	} catch (err) {
 		res.status(500).json(err);
@@ -85,23 +94,6 @@ const getPost = async (req, res) => {
 
 const getAllPost = async (req, res) => {
 	try {
-		// const currentUser = await User.findById(req.params.id);
-		// const currentUserPosts = await Post.find({ userId: currentUser._id });
-		// console.log('Current User Post', currentUserPosts);
-		// console.log('Friends:', currentUser.friends);
-		// const friendPost = await Promise.all(
-		// 	currentUser.friends.map((friendId) => {
-		// 		console.log(friendId);
-		// 		Post.find({ userId: friendId }).lean();
-		// 	})
-		// ).catch((err) => {
-		// 	res.status(404).json(err);
-		// });
-		// console.log('FriendsPost:', friendPost);
-		// res
-		// 	.status(200)
-		// 	.json(currentUserPosts)
-		// 	.concat(...friendPost);
 		const getAllPost = await Post.find({
 			userId: { $in: [req.user._id, ...req.user.friends] },
 		}).populate('userId');
@@ -116,8 +108,9 @@ module.exports = {
 	createPost,
 	updatePost,
 	deletePost,
-	likeDislike,
-	getPost,
+	likePost,
+	disLikePost,
+	getSinglePost,
 	getAllPost,
 	commentPost,
 };

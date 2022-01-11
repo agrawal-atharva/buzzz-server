@@ -133,6 +133,7 @@ const showAllFriendRequest = async (req, res) => {
 				id: users._id,
 				name: users.username,
 				profilePic: users.profilePicture,
+				friends: users.friends,
 			};
 		});
 		console.log('CUR', currentUserRequest);
@@ -143,8 +144,40 @@ const showAllFriendRequest = async (req, res) => {
 };
 
 const acceptRequest = async (req, res) => {
-	const currentUser = await User.findById(req.params.id);
-	const acceptRequest = currentUser.notification.map();
+	console.log('test');
+	try {
+		const toAcceptUserId = req.body.acceptUserId;
+		const currentUser = await User.findByIdAndUpdate(req.params.id, {
+			$push: { friends: toAcceptUserId },
+			$pull: { notification: toAcceptUserId },
+		}).lean();
+		const toAcceptUser = await User.findByIdAndUpdate(toAcceptUserId, {
+			$push: { friends: req.params.id },
+			$pull: { requestSent: req.params.id },
+		}).lean();
+		const result = [acceptRequestCurrentUser, acceptRequestNotifUser];
+		res.status(200).json(result);
+	} catch (err) {
+		res.status(500).json(err);
+	}
+};
+
+const rejectRequest = async (req, res) => {
+	try {
+		const toRejectUserId = req.body.rejectUserId;
+		const currentUser = await User.findById(req.params.id);
+		const toRejectUser = await User.findById(toRejectUserId);
+		const rejectRequestCurrentUser = await currentUser.update({
+			$pull: { notification: toRejectUserId },
+		});
+		const rejectRequestNotifUser = await toRejectUser.update({
+			$pull: { requestSent: req.params.id },
+		});
+		const result = [currentUser, toRejectUser];
+		res.status(200).json(result);
+	} catch (err) {
+		res.status(500).json(err);
+	}
 };
 
 module.exports = {
@@ -157,4 +190,6 @@ module.exports = {
 	currentUser,
 	contactUser,
 	showAllFriendRequest,
+	acceptRequest,
+	rejectRequest,
 };

@@ -9,6 +9,8 @@ const {
 	currentUser,
 	contactUser,
 	showAllFriendRequest,
+	acceptRequest,
+	rejectRequest,
 } = require('../../controller/Users/users');
 
 const router = express.Router();
@@ -31,5 +33,9 @@ router.get('/:id/suggestions', suggestionUsers);
 router.get('/contacts/:id', contactUser);
 //show all request
 router.get('/:id/showRequest', showAllFriendRequest);
+//accept friend request
+router.put('/:id/accept', acceptRequest);
+//reject request
+router.put('/:id/reject', rejectRequest);
 
 module.exports = router;
