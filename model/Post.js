@@ -20,6 +20,10 @@ const PostSchema = new Schema(
 			type: Array,
 			default: [],
 		},
+		dislikes: {
+			type: Array,
+			default: [],
+		},
 		comments: [
 			{
 				text: String,

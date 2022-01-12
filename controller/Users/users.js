@@ -126,9 +126,7 @@ const showAllFriendRequest = async (req, res) => {
 		const currentUser = await User.findById(req.params.id).populate(
 			'notification'
 		);
-		console.log('CUI', currentUser);
 		const currentUserRequest = currentUser.notification.map((users) => {
-			console.log('users::', users);
 			return {
 				id: users._id,
 				name: users.username,
@@ -136,7 +134,6 @@ const showAllFriendRequest = async (req, res) => {
 				friends: users.friends,
 			};
 		});
-		console.log('CUR', currentUserRequest);
 		res.status(200).json(currentUserRequest);
 	} catch (err) {
 		res.status(500).json(err);
@@ -144,18 +141,24 @@ const showAllFriendRequest = async (req, res) => {
 };
 
 const acceptRequest = async (req, res) => {
-	console.log('test');
 	try {
 		const toAcceptUserId = req.body.acceptUserId;
-		const currentUser = await User.findByIdAndUpdate(req.params.id, {
-			$push: { friends: toAcceptUserId },
-			$pull: { notification: toAcceptUserId },
-		}).lean();
-		const toAcceptUser = await User.findByIdAndUpdate(toAcceptUserId, {
-			$push: { friends: req.params.id },
-			$pull: { requestSent: req.params.id },
-		}).lean();
-		const result = [acceptRequestCurrentUser, acceptRequestNotifUser];
+		const currentUser = await User.findById(req.params.id);
+		const toAcceptUser = await User.findById(toAcceptUserId);
+		if (
+			!currentUser.friends.includes(toAcceptUserId) &&
+			!toAcceptUser.friends.includes(req.params.id)
+		) {
+			await currentUser.updateOne({
+				$push: { friends: toAcceptUserId },
+				$pull: { notification: toAcceptUserId },
+			});
+			await toAcceptUser.updateOne({
+				$push: { friends: req.params.id },
+				$pull: { requestSent: req.params.id },
+			});
+		}
+		const result = [currentUser, toAcceptUser];
 		res.status(200).json(result);
 	} catch (err) {
 		res.status(500).json(err);

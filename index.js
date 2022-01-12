@@ -17,6 +17,9 @@ const postRoute = require('./routes/Posts/posts');
 
 const app = express();
 
+//content-length
+app.use(express.json({ limit: '50mb' }));
+
 //cors
 corsOptions = {
 	origin: 'http://localhost:3000',
@@ -33,7 +36,11 @@ app.use(bodyParser.json());
 
 //cookie-session
 app.use(
-	cookieSession({ name: 'session', keys: ['atharva'], maxAge: 24 * 60 * 60 })
+	cookieSession({
+		name: 'session',
+		keys: ['atharva'],
+		maxAge: 24 * 60 * 60 * 60,
+	})
 );
 
 //passport

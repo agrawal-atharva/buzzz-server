@@ -3,13 +3,10 @@ const User = require('../../model/User');
 
 const createPost = async (req, res) => {
 	const newPost = new Post(req.body);
-	console.log('New Post', newPost);
 	try {
 		const savePost = await newPost.save();
-		console.log('Saved Post', savePost);
 		res.status(201).json(savePost);
 	} catch (err) {
-		console.log('Error::', err);
 		res.status(500).json(err);
 	}
 };
@@ -45,10 +42,18 @@ const deletePost = async (req, res) => {
 const likePost = async (req, res) => {
 	try {
 		const post = await Post.findById(req.params.id);
+
 		if (!post.likes.includes(req.body.userId)) {
-			await post
-				.updateOne({ $push: { likes: req.body.userId } })
-				.populate('userId');
+			if (post.dislikes.includes(req.body.userId)) {
+				await post
+					.updateOne({
+						$push: { likes: req.body.userId },
+						$pull: { dislikes: req.body.userId },
+					})
+					.populate('userId');
+			} else {
+				await post.updateOne({ $push: { likes: req.body.userId } });
+			}
 			res.status(200).json(post);
 		}
 	} catch (err) {
@@ -59,10 +64,19 @@ const likePost = async (req, res) => {
 const disLikePost = async (req, res) => {
 	try {
 		const post = await Post.findById(req.params.id);
-		if (post.likes.includes(req.body.userId)) {
-			await post.updateOne({ $pull: req.body.userId });
-			res.status(200).json(post);
+		if (!post.dislikes.includes(req.body.userId)) {
+			if (post.likes.includes(req.body.userId)) {
+				await post.updateOne({
+					$pull: { likes: req.body.userId },
+					$push: { dislikes: req.body.userId },
+				});
+			} else {
+				await post
+					.updateOne({ push: { dislikes: req.body.userId } })
+					.populate('userId');
+			}
 		}
+		res.status(200).json(post);
 	} catch (err) {
 		res.status(500).json(err);
 	}
@@ -94,10 +108,13 @@ const getSinglePost = async (req, res) => {
 
 const getAllPost = async (req, res) => {
 	try {
+		const currentUser = await User.findById(req.user._id);
+		const currentUserFriend = currentUser.friends;
 		const getAllPost = await Post.find({
-			userId: { $in: [req.user._id, ...req.user.friends] },
-		}).populate('userId');
-		console.log('AllPost', getAllPost);
+			userId: { $in: [req.params.id, ...currentUserFriend] },
+		})
+			.populate('userId')
+			.sort({ createdAt: -1 });
 		res.status(200).json(getAllPost);
 	} catch (err) {
 		res.status(500).json(err);
