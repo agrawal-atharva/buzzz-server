@@ -28,6 +28,8 @@ const PostSchema = new Schema(
 			{
 				text: String,
 				postedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+				createdAt: Date,
+				img: String,
 			},
 		],
 	},

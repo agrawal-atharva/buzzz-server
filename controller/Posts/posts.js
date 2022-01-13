@@ -87,6 +87,8 @@ const commentPost = async (req, res) => {
 		const newComment = {
 			text: req.body.text,
 			postedBy: req.body.postedBy,
+			createdAt: Date.now(),
+			img: req.user.profilePicture,
 		};
 		console.log(newComment);
 		const comment = await Post.findByIdAndUpdate(req.params.id, {
