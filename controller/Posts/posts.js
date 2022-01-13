@@ -86,12 +86,24 @@ const commentPost = async (req, res) => {
 	try {
 		const newComment = {
 			text: req.body.text,
-			postedBy: req.user._id,
+			postedBy: req.body.postedBy,
 		};
+		console.log(newComment);
 		const comment = await Post.findByIdAndUpdate(req.params.id, {
-			$push: { newComment },
+			$push: { comments: newComment },
 		});
 		res.status(200).json(comment);
+	} catch (err) {
+		res.status(500).json(err);
+	}
+};
+
+const getAllComments = async (req, res) => {
+	try {
+		const postId = req.params.id;
+		const post = await Post.findById(postId);
+		const allComments = post.comments;
+		res.status(200).json(allComments);
 	} catch (err) {
 		res.status(500).json(err);
 	}
@@ -130,4 +142,5 @@ module.exports = {
 	getSinglePost,
 	getAllPost,
 	commentPost,
+	getAllComments,
 };
